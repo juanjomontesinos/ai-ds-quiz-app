@@ -106,28 +106,44 @@ elif st.session_state.page == 'quiz':
 
     selected = st.radio("Choose an answer:", options, key=f"q{st.session_state.current_q}")
 
-    if st.button("Submit Answer"):
+    if f"answered_{st.session_state.current_q}" not in st.session_state:
+        st.session_state[f"answered_{st.session_state.current_q}"] = False
+
+    if not st.session_state[f"answered_{st.session_state.current_q}"]:
+        if st.button("Submit Answer"):
+            st.session_state[f"answered_{st.session_state.current_q}"] = True
+            if selected == correct:
+                st.success("✅ Correct!")
+                st.session_state.score += 1
+            else:
+                st.error("❌ Incorrect.")
+                st.markdown(f"**Correct Answer:** {correct}")
+            st.rerun()
+    else:
         if selected == correct:
             st.success("✅ Correct!")
-            st.session_state.score += 1
         else:
             st.error("❌ Incorrect.")
             st.markdown(f"**Correct Answer:** {correct}")
-        if st.session_state.current_q < 19:
+
+        if st.session_state.current_q < len(st.session_state.questions) - 1:
             if st.button("Next Question"):
                 st.session_state.current_q += 1
+                st.session_state[f"answered_{st.session_state.current_q}"] = False
                 st.rerun()
         else:
             if st.button("See Results"):
                 st.session_state.page = 'results'
                 st.rerun()
 
-    # Add Exit Test button
     if st.button("Exit Test"):
         st.session_state.page = 'landing'
         st.session_state.questions = []
         st.session_state.current_q = 0
         st.session_state.score = 0
+        for key in list(st.session_state.keys()):
+            if key.startswith("answered_"):
+                del st.session_state[key]
         st.rerun()
 
 elif st.session_state.page == 'results':
